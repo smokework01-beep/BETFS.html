@@ -1,201 +1,130 @@
-# BETFS.html<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width">
 <title>BetFr</title>
-<link rel="manifest" href="manifest.json">
+
 <style>
-body{margin:0;padding:20px;background:#000;color:#fff;font-family:sans-serif;font-size:22px;}
-.btn{width:100%;margin:12px 0;padding:26px;border-radius:22px;text-align:center;font-weight:700;box-shadow:0 12px 25px rgba(0,0,0,.6);border:none;cursor:pointer;transition:.2s;}
-.btn:active{transform:scale(.96);}
-.tg-top{background:#4169E1;}
-.freebet{background:#FFD700;color:#000;}
-.freetips{background:#1a1a2e;color:#FFD700;}
-.vipres{background:#FF8C00;}
-.prevres{background:#C0C0C0;color:#000;}
-.vipsec{background:#9370DB;}
-.tg-bot{background:#229ED9;}
-.wa-bot{background:#25D366;color:#000;}
-.about{background:#333;color:#ccc;}
-.emoji{font-size:26px;margin-right:10px;}
-.lang-btn{width:48%;display:inline-block;margin:5px 1%;padding:10px;border-radius:10px;font-weight:bold;background:#555;color:#fff;cursor:pointer;text-align:center;}
+body{margin:0;background:#000;color:#fff;font-family:sans-serif}
+header{padding:15px;text-align:center;font-size:26px;font-weight:bold;background:#111}
+nav{display:flex}
+nav button{flex:1;padding:14px;border:none;font-weight:bold;font-size:16px}
+.free{background:#FFD700}
+.vip{background:#9370DB}
+.admin{background:#4169E1;color:#fff}
+.lang{background:#333;color:#fff}
+section{display:none;padding:20px}
+.active{display:block}
+textarea{width:100%;height:140px;background:#111;color:#fff;border-radius:10px;padding:10px}
+button.action{width:100%;padding:14px;margin:8px 0;border:none;border-radius:12px;font-weight:bold}
+.win{background:lime}
+.lost{background:red;color:#fff}
 </style>
 </head>
+
 <body>
 
-<h1 style="text-align:center;">🎯 BetFr</h1>
+<header>⚽ BetFr</header>
 
-<div class="lang-btn" onclick="setLang('hu')">🇭🇺 Magyar</div>
-<div class="lang-btn" onclick="setLang('en')">🇬🇧 English</div>
+<nav>
+<button class="free" onclick="show('free')">FREE</button>
+<button class="vip" onclick="vipLogin()">VIP</button>
+<button class="admin" onclick="adminLogin()">ADMIN</button>
+<button class="lang" onclick="toggleLang()">HU / EN</button>
+</nav>
 
-<div class="btn freebet" onclick="location.href='free.html'"><span class="emoji">🎯</span><span id="freeBtn"></span></div>
-<div class="btn vipres" onclick="location.href='vip.html'"><span class="emoji">👑</span><span id="vipBtn"></span></div>
-<div class="btn prevres" onclick="location.href='results.html'"><span class="emoji">📊</span><span id="resultsBtn"></span></div>
+<!-- FREE -->
+<section id="free" class="active">
+<h2>🎯 FREE TIPS</h2>
+<div id="freeTips"></div>
+</section>
+
+<!-- VIP -->
+<section id="vip">
+<h2>👑 VIP TIPS</h2>
+<div id="vipTips"></div>
+</section>
+
+<!-- ADMIN -->
+<section id="admin">
+<h2>⚙️ ADMIN PANEL</h2>
+
+<h3>FREE TIPPEK</h3>
+<textarea id="freeInput"></textarea>
+<button class="action free" onclick="saveTips('free')">FREE MENTÉS</button>
+
+<h3>VIP TIPPEK</h3>
+<textarea id="vipInput"></textarea>
+<button class="action vip" onclick="saveTips('vip')">VIP MENTÉS</button>
+
+<h3>EREDMÉNY</h3>
+<button class="action win" onclick="setResult('WIN')">✅ WIN</button>
+<button class="action lost" onclick="setResult('LOST')">❌ LOST</button>
+</section>
 
 <script>
+/* ====== ALAP ====== */
 let lang = localStorage.getItem("lang") || "hu";
-const text = {
-  hu:{free:"INGYEN TIPPEK",vip:"VIP TIPPEK",results:"EREDMÉNYEK"},
-  en:{free:"FREE TIPS",vip:"VIP TIPS",results:"RESULTS"}
-};
-function setLang(l){localStorage.setItem("lang",l);location.reload();}
-document.getElementById("freeBtn").innerText=text[lang].free;
-document.getElementById("vipBtn").innerText=text[lang].vip;
-document.getElementById("resultsBtn").innerText=text[lang].results;
+const adminPass="admin123";
+const vipPass="vip123";
+
+/* ====== NAV ====== */
+function show(id){
+ document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ loadTips();
+}
+
+/* ====== VIP LOGIN ====== */
+function vipLogin(){
+ let p=prompt("VIP PASSWORD");
+ if(p===vipPass) show("vip");
+ else alert("Hibás jelszó");
+}
+
+/* ====== ADMIN LOGIN ====== */
+function adminLogin(){
+ let p=prompt("ADMIN PASSWORD");
+ if(p===adminPass) show("admin");
+ else alert("Hibás jelszó");
+}
+
+/* ====== TIPPEK ====== */
+function saveTips(type){
+ localStorage.setItem(type+"Tips", document.getElementById(type+"Input").value);
+ alert("Mentve!");
+ loadTips();
+}
+
+function setResult(r){
+ localStorage.setItem("result",r);
+ alert("Eredmény: "+r);
+ loadTips();
+}
+
+function loadTips(){
+ let free = localStorage.getItem("freeTips") || "Nincs FREE tipp";
+ let vip  = localStorage.getItem("vipTips")  || "Nincs VIP tipp";
+ let res  = localStorage.getItem("result")   || "⏳ PENDING";
+
+ freeTips.innerHTML = free.replace(/\n/g,"<br>")+"<br><b>"+res+"</b>";
+ vipTips.innerHTML  = vip.replace(/\n/g,"<br>")+"<br><b>"+res+"</b>";
+
+ freeInput.value = free;
+ vipInput.value  = vip;
+}
+
+/* ====== NYELV ====== */
+function toggleLang(){
+ lang = lang==="hu"?"en":"hu";
+ localStorage.setItem("lang",lang);
+ alert(lang==="hu"?"Magyar":"English");
+}
+
+/* ====== START ====== */
+loadTips();
 </script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="hu">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
-<title>FREE TIPS - BetFr</title>
-<style>
-body{margin:0;padding:20px;background:#000;color:#fff;font-family:sans-serif;}
-.card{background:#111;padding:15px;margin:10px 0;border-radius:15px;box-shadow:0 8px 20px rgba(0,0,0,.6);}
-.win{color:lime;font-weight:bold;}
-.lost{color:red;font-weight:bold;}
-</style>
-</head>
-<body>
-<h2>🎯 FREE TIPPEK</h2>
-
-<div class="card">
-🕒 13:30<br>
-⚽ Leeds – Manchester Utd.<br>
-Tipp: Manchester Utd. WIN (1X2)<br>
-Odds: 2.52<br>
-<b>⏳ PENDING</b>
-</div>
-
-<div class="card">
-🕒 16:15<br>
-⚽ Real Madrid – Betis<br>
-Tipp: Real Madrid WIN (1X2)<br>
-Odds: 1.38<br>
-<b>⏳ PENDING</b>
-</div>
-
-<div class="card">
-🕒 20:45<br>
-⚽ Internazionale – Bologna<br>
-Tipp: Over 2.5 Goals<br>
-Odds: 1.60<br>
-<b>⏳ PENDING</b>
-</div>
-
-<div class="card">
-🕒 16:00<br>
-⚽ Fulham – Liverpool<br>
-Tipp: Over 2.5 Goals<br>
-Odds: 1.72<br>
-<b>⏳ PENDING</b>
-</div><!DOCTYPE html>
-<html lang="hu">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
-<title>RESULTS - BetFr</title>
-<style>
-body{margin:0;padding:20px;background:#000;color:#fff;font-family:sans-serif;}
-.card{background:#111;padding:15px;margin:10px 0;border-radius:15px;box-shadow:0 8px 20px rgba(0,0,0,.6);}
-.win{color:lime;font-weight:bold;}
-.lost{color:red;font-weight:bold;}
-</style>
-</head>
-<body>
-<h2>📊 EREDMÉNYEK</h2>
-
-<div class="card">
-⚽ Real Madrid – Milan<br>
-Tipp: Over 2.5<br>
-Odds: 1.90<br>
-<b class="win">✅ WIN</b>
-</div>
-
-<div class="card">
-⚽ Ajax – PSV<br>
-Tipp: BTTS<br>
-Odds: 1.70<br>
-<b class="lost">❌ LOST</b>
-</div>
 
 </body>
 </html>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="hu">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
-<title>VIP - BetFr</title>
-<style>
-body{margin:0;padding:20px;background:#000;color:#fff;font-family:sans-serif;}
-.card{background:#111;padding:15px;margin:10px 0;border-radius:15px;box-shadow:0 8px 20px rgba(0,0,0,.6);}
-</style>
-</head>
-<body>
-<script>
-const pass="betfrvip";
-if(localStorage.getItem("vip")!=="ok"){
-  let p=prompt("VIP PASSWORD:");
-  if(p===pass){localStorage.setItem("vip","ok");}
-  else{alert("Wrong password");location.href="index.html";}
-}
-</script>
-
-<h2>👑 VIP TIPPEK</h2>
-
-<div class="card">
-⚽ PSG – Inter<br>
-Tipp: PSG WIN<br>
-Odds: 2.05
-</div>
-
-<div class="card">
-⚽ Juventus – Napoli<br>
-Tipp: Juventus WIN<br>
-Odds: 1.95
-</div>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="hu">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
-<title>Admin - BetFr</title>
-<style>
-body{margin:0;padding:20px;background:#000;color:#fff;font-family:sans-serif;}
-textarea{width:100%;height:200px;background:#111;color:#fff;padding:10px;border-radius:10px;border:none;}
-button{margin-top:10px;padding:15px;width:100%;border:none;border-radius:15px;background:#FFD700;color:#000;font-weight:bold;}
-</style>
-</head>
-<body>
-<h2>Admin panel</h2>
-<textarea id="data">⚽ Barca – Napoli | Over 2.5 | 1.85 | WIN
-⚽ Ajax – PSV | BTTS | 1.70 | LOST
-</textarea>
-<button onclick="save()">MENTÉS</button>
-
-<script>
-function save(){
-  localStorage.setItem("results",document.getElementById("data").value);
-  alert("Mentve!");
-}
-</script>
-</body>
-</html>{
- "name":"BetFr",
- "short_name":"BetFr",
- "start_url":"index.html",
- "display":"standalone",
- "background_color":"#000000",
- "theme_color":"#000000",
- "icons":[
-  {"src":"icon.png","sizes":"192x192","type":"image/png"}
- ]
-}
