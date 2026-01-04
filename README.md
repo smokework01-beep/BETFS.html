@@ -40,6 +40,7 @@ button.action{width:100%;padding:14px;margin:8px 0;border:none;border-radius:12p
 <button class="vip" onclick="vipLogin()">VIP</button>
 <button class="admin" onclick="adminLogin()">ADMIN</button>
 <button class="lang" onclick="toggleLang()">HU / EN</button>
+<button class="free" onclick="show('history')">📊 EREDMÉNYEK</button>
 </nav>
 
 <section id="free" class="active">
@@ -52,6 +53,12 @@ button.action{width:100%;padding:14px;margin:8px 0;border:none;border-radius:12p
 <h2>👑 VIP TIPS</h2>
 <div id="vipTips"></div>
 <div class="stat" id="vipStat"></div>
+</section>
+
+<section id="history">
+<h2>📊 VISSZANÉZHETŐ EREDMÉNYEK</h2>
+<div id="historyList"></div>
+<div class="stat" id="historyStat"></div>
 </section>
 
 <section id="admin">
@@ -89,6 +96,7 @@ function show(id){
  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  loadTips();
+ renderHistory();
 }
 
 function vipLogin(){
@@ -110,9 +118,10 @@ function saveTips(type){
  localStorage.setItem(type+"Status", JSON.stringify(statuses));
  alert("Mentve!");
  loadTips();
+ renderHistory();
 }
 
-/* ====== KÁRTYÁS TIPPEK + WIN/LOST ====== */
+/* ====== KÁRTYÁS TIPPEK + WIN/LOST + HISTORY ====== */
 function renderCards(text,type){
  let statuses = JSON.parse(localStorage.getItem(type+"Status")||"{}");
  let tArr = text.split(/\n\s*\n/);
@@ -129,7 +138,18 @@ function setResult(type,index,result){
  let statuses = JSON.parse(localStorage.getItem(type+"Status")||"{}");
  statuses[index]=result;
  localStorage.setItem(type+"Status", JSON.stringify(statuses));
+
+ // History hozzáadása
+ let history = JSON.parse(localStorage.getItem("history")||"[]");
+ const tipsText = localStorage.getItem(type+"Tips").split(/\n\s*\n/)[index] || "";
+ const now = new Date().toLocaleDateString();
+ if(!history.some(h => h.tip === tipsText && h.type===type)){
+   history.push({type:type, tip: tipsText, result: result, date: now});
+   localStorage.setItem("history", JSON.stringify(history));
+ }
+
  loadTips();
+ renderHistory();
 }
 
 /* ====== STATISZTIKA ====== */
@@ -139,6 +159,28 @@ function renderStat(type){
  let win = Object.values(statuses).filter(s=>"WIN"===s).length;
  let lost = Object.values(statuses).filter(s=>"LOST"===s).length;
  document.getElementById(type+"Stat").innerHTML = `Összes: ${total} | ✅ WIN: ${win} | ❌ LOST: ${lost}`;
+}
+
+/* ====== HISTORY MEGJELENÍTÉS ====== */
+function renderHistory(){
+  let history = JSON.parse(localStorage.getItem("history")||"[]");
+  if(history.length === 0){
+    document.getElementById("historyList").innerHTML = "Nincs lezárt tipp";
+    document.getElementById("historyStat").innerHTML = "";
+    return;
+  }
+
+  // Lista
+  document.getElementById("historyList").innerHTML = history.map((h,i) => {
+    return `<div class="card">${i+1}. ${h.tip}<br>Eredmény: ${h.result==="WIN"?"✅ WIN":"❌ LOST"}<br>Dátum: ${h.date}</div>`;
+  }).join("");
+
+  // Statisztika
+  const win = history.filter(h=>h.result==="WIN").length;
+  const lost = history.filter(h=>h.result==="LOST").length;
+  const total = history.length;
+  const winPercent = Math.round((win/total)*100);
+  document.getElementById("historyStat").innerHTML = `Összes tipp: ${total} | ✅ WIN: ${win} | ❌ LOST: ${lost} | Win %: ${winPercent}%`;
 }
 
 /* ====== BETÖLTÉS ====== */
@@ -175,6 +217,7 @@ function savePasswords(){
 
 /* ====== START ====== */
 loadTips();
+renderHistory();
 
 /* ====== PWA SERVICE WORKER ====== */
 if('serviceWorker' in navigator){
