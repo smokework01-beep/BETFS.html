@@ -3,228 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<title>BetFr</title>
-
-<!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
+<title>BetFr – Free & VIP Tips</title>
 
 <style>
-body{margin:0;background:#000;color:#fff;font-family:sans-serif}
-header{padding:15px;text-align:center;font-size:26px;font-weight:bold;background:#111}
-nav{display:flex}
-nav button{flex:1;padding:14px;border:none;font-weight:bold;font-size:16px}
-.free{background:#FFD700}
-.vip{background:#9370DB}
-.admin{background:#4169E1;color:#fff}
-.lang{background:#333;color:#fff}
-section{display:none;padding:20px}
-.active{display:block}
-textarea{width:100%;height:140px;background:#111;color:#fff;border-radius:10px;padding:10px;margin-bottom:10px}
-input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#111;color:#fff}
-button.action{width:100%;padding:14px;margin:8px 0;border:none;border-radius:12px;font-weight:bold}
-.win{background:lime}
-.lost{background:red;color:#fff}
-.card{background:#111;padding:14px;margin:12px 0;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.6)}
-.stat{margin-top:10px;padding:12px;background:#222;border-radius:12px}
-.card button{float:right;margin-left:6px;padding:3px 8px;border-radius:8px;font-weight:bold;border:none;cursor:pointer}
+body{margin:0;font-family:sans-serif;background:#000;color:#fff;}
+header{padding:15px;text-align:center;font-size:26px;font-weight:bold;background:#111;}
+.nav-btn{width:48%;display:inline-block;margin:1%;padding:15px;text-align:center;border-radius:15px;background:#222;cursor:pointer;}
+.card{background:#111;margin:15px;padding:15px;border-radius:15px;box-shadow:0 6px 20px rgba(0,0,0,.6);}
+.win{color:#00ff6a;font-weight:bold;}
+.lost{color:#ff4d4d;font-weight:bold;}
+.pending{color:#ffd700;font-weight:bold;}
+.stat{background:#1a1a1a;margin:15px;padding:15px;border-radius:15px;}
+#vip-section{display:none;}
+#vip-login{margin:15px;padding:15px;background:#222;border-radius:15px;}
+input[type=password]{padding:10px;width:70%;border-radius:10px;border:none;margin-right:10px;}
+button{padding:10px;border-radius:10px;border:none;background:#1e90ff;color:#fff;cursor:pointer;}
 </style>
 </head>
-
 <body>
 
-<header>⚽ BetFr</header>
+<header>⚽ BetFr – Free & VIP Tips</header>
 
-<nav>
-<button class="free" onclick="show('free')">FREE</button>
-<button class="vip" onclick="vipLogin()">VIP</button>
-<button class="admin" onclick="adminLogin()">ADMIN</button>
-<button class="lang" onclick="toggleLang()">HU / EN</button>
-<button class="free" onclick="show('history')">📊 EREDMÉNYEK</button>
-</nav>
+<div style="text-align:center;">
+  <div class="nav-btn" onclick="showFree()">FREE</div>
+  <div class="nav-btn" onclick="showVIP()">VIP</div>
+</div>
 
-<section id="free" class="active">
-<h2>🎯 FREE TIPS</h2>
-<div id="freeTips"></div>
-<div class="stat" id="freeStat"></div>
-</section>
+<div id="free-section"></div>
 
-<section id="vip">
-<h2>👑 VIP TIPS</h2>
-<div id="vipTips"></div>
-<div class="stat" id="vipStat"></div>
-</section>
+<div id="vip-login">
+  <p>VIP jelszó:</p>
+  <input type="password" id="vip-pass" placeholder="Írd be a jelszót">
+  <button onclick="checkVIP()">Belépés</button>
+</div>
 
-<section id="history">
-<h2>📊 VISSZANÉZHETŐ EREDMÉNYEK</h2>
-<div id="historyList"></div>
-<div class="stat" id="historyStat"></div>
-</section>
-
-<section id="admin">
-<h2>⚙️ ADMIN PANEL</h2>
-
-<h3>FREE TIPPEK</h3>
-<textarea id="freeInput" placeholder="Ide írd a FREE tippeket, üres sor = új tipp"></textarea>
-<button class="action free" onclick="saveTips('free')">FREE MENTÉS</button>
-
-<h3>VIP TIPPEK</h3>
-<textarea id="vipInput" placeholder="Ide írd a VIP tippeket, üres sor = új tipp"></textarea>
-<button class="action vip" onclick="saveTips('vip')">VIP MENTÉS</button>
-
-<h3>🔒 JELSZÓ BEÁLLÍTÁS</h3>
-<label>ADMIN jelszó:</label>
-<input type="text" id="adminNewPass" placeholder="Új admin jelszó">
-<label>VIP jelszó:</label>
-<input type="text" id="vipNewPass" placeholder="Új VIP jelszó">
-<button class="action admin" onclick="savePasswords()">MENTÉS</button>
-</section>
+<div id="vip-section"></div>
+<div id="stats" class="stat"></div>
 
 <script>
-// Alapértelmezett jelszavak
-let adminPass = "Admin79459";
-let vipPass   = "Bet794590";
+// 🔹 JSON fájlok GitHub Pages linkjei
+const FREE_URL = "https://FELHASZNALONEV.github.io/REPO/free.json";
+const VIP_URL  = "https://FELHASZNALONEV.github.io/REPO/vip.json";
 
-// Ellenőrizzük localStorage-ban tárolt jelszót
-if(localStorage.getItem("adminPass")) adminPass = localStorage.getItem("adminPass");
-if(localStorage.getItem("vipPass"))   vipPass   = localStorage.getItem("vipPass");
+// 🔹 VIP jelszó
+const VIP_PASSWORD = "Bet794590";
 
-let lang = localStorage.getItem("lang") || "hu";
+// 🔹 Betöltés funkció
+function loadTips(url, containerId) {
+  fetch(url)
+  .then(res => res.json())
+  .then(data => {
+    let win=0,lost=0,pending=0;
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    data.forEach(t => {
+      if(t.result==="WIN") win++;
+      else if(t.result==="LOST") lost++;
+      else pending++;
 
-/* ====== NAV + LOGIN ====== */
-function show(id){
- document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
- document.getElementById(id).classList.add("active");
- loadTips();
- renderHistory();
+      container.innerHTML += `
+        <div class="card">
+          <b>${t.match}</b><br><br>
+          🎯 Tipp: ${t.tip}<br>
+          💰 Odds: ${t.odds}<br>
+          📅 Dátum: ${t.date}<br><br>
+          Eredmény:
+          <span class="${t.result.toLowerCase()}">${t.result}</span>
+        </div>
+      `;
+    });
+    document.getElementById("stats").innerHTML = `
+      📊 Összes: ${data.length}<br>
+      ✅ WIN: ${win}<br>
+      ❌ LOST: ${lost}<br>
+      ⏳ PENDING: ${pending}<br>
+      📈 Win %: ${Math.round(win/(win+lost||1)*100)}%
+    `;
+  })
+  .catch(()=>{
+    document.getElementById(containerId).innerHTML="<p style='padding:20px'>Nem sikerült betölteni a tippeket</p>";
+  });
 }
 
-function vipLogin(){
- let p=prompt("VIP PASSWORD");
- if(p===vipPass) show("vip");
- else alert("Hibás jelszó");
+// 🔹 FREE rész mutatása
+function showFree(){
+  document.getElementById("free-section").style.display="block";
+  document.getElementById("vip-section").style.display="none";
+  document.getElementById("vip-login").style.display="none";
+  loadTips(FREE_URL,"free-section");
 }
 
-function adminLogin(){
- let p=prompt("ADMIN PASSWORD");
- if(p===adminPass) show("admin");
- else alert("Hibás jelszó");
+// 🔹 VIP rész mutatása
+function showVIP(){
+  document.getElementById("vip-login").style.display="block";
+  document.getElementById("free-section").style.display="none";
+  document.getElementById("vip-section").style.display="none";
 }
 
-/* ====== TIPPEK MENTÉSE ====== */
-function saveTips(type){
- localStorage.setItem(type+"Tips", document.getElementById(type+"Input").value);
- let statuses = {};
- localStorage.setItem(type+"Status", JSON.stringify(statuses));
- alert("Mentve!");
- loadTips();
- renderHistory();
-}
-
-/* ====== KÁRTYÁS TIPPEK + WIN/LOST + HISTORY ====== */
-function renderCards(text,type){
- let statuses = JSON.parse(localStorage.getItem(type+"Status")||"{}");
- let tArr = text.split(/\n\s*\n/);
- return tArr.map((t,i)=>{
-  let r = statuses[i]||"⏳";
-  return `<div class="card">${t.replace(/\n/g,"<br>")}
-  <button class="win" onclick="setResult('${type}',${i},'WIN')">✅</button>
-  <button class="lost" onclick="setResult('${type}',${i},'LOST')">❌</button>
-  <div>Státusz: ${r}</div></div>`;
- }).join("");
-}
-
-function setResult(type,index,result){
- let statuses = JSON.parse(localStorage.getItem(type+"Status")||"{}");
- statuses[index]=result;
- localStorage.setItem(type+"Status", JSON.stringify(statuses));
-
- // History hozzáadása
- let history = JSON.parse(localStorage.getItem("history")||"[]");
- const tipsText = localStorage.getItem(type+"Tips").split(/\n\s*\n/)[index] || "";
- const now = new Date().toLocaleDateString();
- if(!history.some(h => h.tip === tipsText && h.type===type)){
-   history.push({type:type, tip: tipsText, result: result, date: now});
-   localStorage.setItem("history", JSON.stringify(history));
- }
-
- loadTips();
- renderHistory();
-}
-
-/* ====== STATISZTIKA ====== */
-function renderStat(type){
- let statuses = JSON.parse(localStorage.getItem(type+"Status")||"{}");
- let total = Object.keys(statuses).length;
- let win = Object.values(statuses).filter(s=>"WIN"===s).length;
- let lost = Object.values(statuses).filter(s=>"LOST"===s).length;
- document.getElementById(type+"Stat").innerHTML = `Összes: ${total} | ✅ WIN: ${win} | ❌ LOST: ${lost}`;
-}
-
-/* ====== HISTORY MEGJELENÍTÉS ====== */
-function renderHistory(){
-  let history = JSON.parse(localStorage.getItem("history")||"[]");
-  if(history.length === 0){
-    document.getElementById("historyList").innerHTML = "Nincs lezárt tipp";
-    document.getElementById("historyStat").innerHTML = "";
-    return;
+// 🔹 VIP jelszó ellenőrzés
+function checkVIP(){
+  const pass = document.getElementById("vip-pass").value;
+  if(pass === VIP_PASSWORD){
+    document.getElementById("vip-login").style.display="none";
+    document.getElementById("vip-section").style.display="block";
+    loadTips(VIP_URL,"vip-section");
+  }else{
+    alert("Hibás jelszó!");
   }
-
-  // Lista
-  document.getElementById("historyList").innerHTML = history.map((h,i) => {
-    return `<div class="card">${i+1}. ${h.tip}<br>Eredmény: ${h.result==="WIN"?"✅ WIN":"❌ LOST"}<br>Dátum: ${h.date}</div>`;
-  }).join("");
-
-  // Statisztika
-  const win = history.filter(h=>h.result==="WIN").length;
-  const lost = history.filter(h=>h.result==="LOST").length;
-  const total = history.length;
-  const winPercent = Math.round((win/total)*100);
-  document.getElementById("historyStat").innerHTML = `Összes tipp: ${total} | ✅ WIN: ${win} | ❌ LOST: ${lost} | Win %: ${winPercent}%`;
 }
 
-/* ====== BETÖLTÉS ====== */
-function loadTips(){
- let free = localStorage.getItem("freeTips")||"Nincs FREE tipp";
- let vip  = localStorage.getItem("vipTips")||"Nincs VIP tipp";
- freeTips.innerHTML = renderCards(free,"free");
- vipTips.innerHTML  = renderCards(vip,"vip");
- freeInput.value = free;
- vipInput.value  = vip;
- renderStat("free");
- renderStat("vip");
-}
-
-/* ====== NYELV ====== */
-function toggleLang(){
- lang = lang==="hu"?"en":"hu";
- localStorage.setItem("lang",lang);
- alert(lang==="hu"?"Magyar":"English");
-}
-
-/* ====== JELSZÓ MENTÉSE ====== */
-function savePasswords(){
-  const a = document.getElementById("adminNewPass").value;
-  const v = document.getElementById("vipNewPass").value;
-
-  if(a) { localStorage.setItem("adminPass", a); adminPass = a; }
-  if(v) { localStorage.setItem("vipPass", v);   vipPass = v; }
-
-  alert("Jelszavak mentve!");
-  document.getElementById("adminNewPass").value = "";
-  document.getElementById("vipNewPass").value = "";
-}
-
-/* ====== START ====== */
-loadTips();
-renderHistory();
-
-/* ====== PWA SERVICE WORKER ====== */
-if('serviceWorker' in navigator){
- navigator.serviceWorker.register('sw.js')
- .then(()=>console.log('SW registered'))
- .catch(err=>console.log('SW failed', err));
-}
+// 🔹 Alapértelmezett: FREE
+showFree();
 </script>
+
 </body>
 </html>
