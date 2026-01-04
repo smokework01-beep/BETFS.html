@@ -108,8 +108,18 @@ function loadTips(){
  let vip  = localStorage.getItem("vipTips")  || "Nincs VIP tipp";
  let res  = localStorage.getItem("result")   || "⏳ PENDING";
 
- freeTips.innerHTML = free.replace(/\n/g,"<br>")+"<br><b>"+res+"</b>";
- vipTips.innerHTML  = vip.replace(/\n/g,"<br>")+"<br><b>"+res+"</b>";
+ function renderCards(text){
+  return text
+    .split(/\n\s*\n/)   // üres sorokra bont
+    .map(t => 
+      '<div style="background:#111;padding:14px;margin:12px 0;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.6)">' +
+      t.replace(/\n/g,"<br>") +
+      '</div>'
+    ).join("");
+}
+
+freeTips.innerHTML = renderCards(free) + "<b>"+res+"</b>";
+vipTips.innerHTML  = renderCards(vip)  + "<b>"+res+"</b>";
 
  freeInput.value = free;
  vipInput.value  = vip;
