@@ -63,17 +63,35 @@ body{margin:0;padding:20px;background:#000;color:#fff;font-family:sans-serif;}
 <h2>🎯 FREE TIPPEK</h2>
 
 <div class="card">
-⚽ Barcelona – Milan<br>
-Tipp: Over 2.5<br>
-Odds: 1.85<br>
-<b class="win">✅ WIN</b>
+🕒 13:30<br>
+⚽ Leeds – Manchester Utd.<br>
+Tipp: Manchester Utd. WIN (1X2)<br>
+Odds: 2.52<br>
+<b>⏳ PENDING</b>
 </div>
 
 <div class="card">
-⚽ Arsenal – Chelsea<br>
-Tipp: BTTS<br>
-Odds: 1.70<br>
-<b class="lost">❌ LOST</b>
+🕒 16:15<br>
+⚽ Real Madrid – Betis<br>
+Tipp: Real Madrid WIN (1X2)<br>
+Odds: 1.38<br>
+<b>⏳ PENDING</b>
+</div>
+
+<div class="card">
+🕒 20:45<br>
+⚽ Internazionale – Bologna<br>
+Tipp: Over 2.5 Goals<br>
+Odds: 1.60<br>
+<b>⏳ PENDING</b>
+</div>
+
+<div class="card">
+🕒 16:00<br>
+⚽ Fulham – Liverpool<br>
+Tipp: Over 2.5 Goals<br>
+Odds: 1.72<br>
+<b>⏳ PENDING</b>
 </div><!DOCTYPE html>
 <html lang="hu">
 <head>
